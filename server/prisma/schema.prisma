@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @id @default(uuid())
+  email         String        @unique
+  password      String
+  name          String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  preferences   Preference[]
+  mealHistory   MealHistory[]
+  groceryLists  GroceryList[]
+  subscription  Subscription?
+}
+
+model Subscription {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId String
+  stripePriceId    String
+  status           String
+  currentPeriodEnd DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Preference {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  value     String
+  createdAt DateTime @default(now())
+}
+
+model Meal {
+  id          String        @id @default(uuid())
+  name        String
+  description String?
+  ingredients Json
+  cuisine     String?
+  dietaryTags Json
+  prepTime    Int?
+  createdAt   DateTime      @default(now())
+  history     MealHistory[]
+}
+
+model MealHistory {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealId      String
+  meal        Meal     @relation(fields: [mealId], references: [id])
+  suggestedAt DateTime @default(now())
+  rating      Int?
+}
+
+model GroceryList {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     Json
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
