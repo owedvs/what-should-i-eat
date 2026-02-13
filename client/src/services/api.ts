@@ -70,12 +70,13 @@ export const preferencesAPI = {
 // Meals API
 export const mealsAPI = {
   suggestMeal: async (excludeRecent?: boolean, maxPrepTime?: number) => {
-    const response = await api.post<{ meal: Meal; historyId: string }>(
+    const params: any = {};
+    if (excludeRecent !== undefined) params.excludeRecent = excludeRecent;
+    if (maxPrepTime !== undefined) params.maxPrepTime = maxPrepTime;
+    
+    const response = await api.get<{ meal: Meal; historyId: string }>(
       '/meals/suggest',
-      {
-        excludeRecent,
-        maxPrepTime,
-      }
+      { params }
     );
     return response.data;
   },
@@ -87,8 +88,8 @@ export const mealsAPI = {
     return response.data;
   },
 
-  rateMeal: async (id: string, rating: number) => {
-    const response = await api.post<MealHistory>(`/meals/history/${id}/rate`, {
+  rateMeal: async (historyId: string, rating: number) => {
+    const response = await api.patch<MealHistory>(`/meals/history/${historyId}/rate`, {
       rating,
     });
     return response.data;
@@ -98,12 +99,12 @@ export const mealsAPI = {
 // Grocery API
 export const groceryAPI = {
   createGroceryList: async (mealIds: string[]) => {
-    const response = await api.post<GroceryList>('/grocery', { mealIds });
+    const response = await api.post<GroceryList>('/grocery-lists', { mealIds });
     return response.data;
   },
 
   getGroceryLists: async () => {
-    const response = await api.get<GroceryList[]>('/grocery');
+    const response = await api.get<GroceryList[]>('/grocery-lists');
     return response.data;
   },
 
@@ -111,7 +112,7 @@ export const groceryAPI = {
     id: string,
     updates: { items?: any[]; completed?: boolean }
   ) => {
-    const response = await api.put<GroceryList>(`/grocery/${id}`, updates);
+    const response = await api.patch<GroceryList>(`/grocery-lists/${id}`, updates);
     return response.data;
   },
 };

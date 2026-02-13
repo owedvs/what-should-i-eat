@@ -12,36 +12,44 @@ export const suggestMeal = async (req: AuthRequest, res: Response) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { excludeRecent, maxPrepTime } = req.body;
+    const excludeRecent = req.query.excludeRecent === 'true';
+    const maxPrepTime = req.query.maxPrepTime ? parseInt(req.query.maxPrepTime as string) : undefined;
 
     // Get user preferences
     const preferences = await prisma.preference.findMany({
       where: { userId },
     });
 
+    // Group preferences by type
+    const likedFoods = preferences
+      .filter((p) => p.type === 'liked_food')
+      .map((p) => p.value.toLowerCase());
+
+    const dislikedFoods = preferences
+      .filter((p) => p.type === 'disliked_food')
+      .map((p) => p.value.toLowerCase());
+
     const dietaryRestrictions = preferences
-      .filter((p) => p.type === 'dietary')
+      .filter((p) => p.type === 'dietary_restriction')
       .map((p) => p.value.toLowerCase());
 
-    const allergies = preferences
-      .filter((p) => p.type === 'allergy')
-      .map((p) => p.value.toLowerCase());
-
-    const preferredCuisines = preferences
-      .filter((p) => p.type === 'cuisine')
-      .map((p) => p.value.toLowerCase());
-
-    const likedIngredients = preferences
-      .filter((p) => p.type === 'ingredient')
+    const cuisinePreferences = preferences
+      .filter((p) => p.type === 'cuisine_preference')
       .map((p) => p.value.toLowerCase());
 
     // Get recent meal history if excludeRecent is enabled
     let recentMealIds: string[] = [];
     if (excludeRecent) {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
       const recentHistory = await prisma.mealHistory.findMany({
-        where: { userId },
-        orderBy: { suggestedAt: 'desc' },
-        take: 5,
+        where: { 
+          userId,
+          suggestedAt: {
+            gte: sevenDaysAgo
+          }
+        },
         select: { mealId: true },
       });
       recentMealIds = recentHistory.map((h) => h.mealId);
@@ -55,12 +63,20 @@ export const suggestMeal = async (req: AuthRequest, res: Response) => {
       meals = meals.filter((meal) => !recentMealIds.includes(meal.id));
     }
 
+    // Filter by cuisine preferences if any exist
+    if (cuisinePreferences.length > 0) {
+      meals = meals.filter((meal) => {
+        const mealCuisine = meal.cuisine?.toLowerCase() || '';
+        return cuisinePreferences.includes(mealCuisine);
+      });
+    }
+
     // Filter by prep time
     if (maxPrepTime && maxPrepTime > 0) {
       meals = meals.filter((meal) => !meal.prepTime || meal.prepTime <= maxPrepTime);
     }
 
-    // Score meals based on preferences
+    // CLIENT-SIDE FILTERING: Filter and score meals based on preferences
     const scoredMeals = meals.map((meal) => {
       let score = 0;
 
@@ -70,33 +86,27 @@ export const suggestMeal = async (req: AuthRequest, res: Response) => {
       const mealIngredients = (meal.ingredients as string[]).map((ing) =>
         ing.toLowerCase()
       );
-      const mealCuisine = meal.cuisine?.toLowerCase() || '';
 
-      // Check dietary restrictions (must match all)
+      // Check ALL dietary restrictions are met (must match all)
       const meetsDietaryReqs = dietaryRestrictions.every((restriction) =>
-        mealTags.includes(restriction)
+        mealTags.some((tag) => tag.includes(restriction))
       );
       if (!meetsDietaryReqs && dietaryRestrictions.length > 0) {
         return { meal, score: -1 }; // Disqualify
       }
 
-      // Check allergies (must not contain any)
-      const hasAllergies = allergies.some((allergy) =>
-        mealIngredients.some((ing) => ing.includes(allergy))
+      // Check if ANY disliked food is in ingredients (exclude if yes)
+      const hasDislikedFood = dislikedFoods.some((disliked) =>
+        mealIngredients.some((ing) => ing.includes(disliked))
       );
-      if (hasAllergies) {
+      if (hasDislikedFood) {
         return { meal, score: -1 }; // Disqualify
       }
 
-      // Boost score for preferred cuisines
-      if (preferredCuisines.length > 0 && preferredCuisines.includes(mealCuisine)) {
-        score += 10;
-      }
-
-      // Boost score for liked ingredients
-      likedIngredients.forEach((liked) => {
+      // SCORING: Count how many liked ingredients the meal contains
+      likedFoods.forEach((liked) => {
         if (mealIngredients.some((ing) => ing.includes(liked))) {
-          score += 5;
+          score += 1;
         }
       });
 
@@ -166,7 +176,7 @@ export const getMealHistory = async (req: AuthRequest, res: Response) => {
 export const rateMeal = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
-    const { id } = req.params;
+    const { historyId } = req.params;
     const { rating } = req.body;
 
     if (!userId) {
@@ -178,7 +188,7 @@ export const rateMeal = async (req: AuthRequest, res: Response) => {
     }
 
     const mealHistory = await prisma.mealHistory.findUnique({
-      where: { id },
+      where: { id: historyId },
     });
 
     if (!mealHistory) {
@@ -190,7 +200,7 @@ export const rateMeal = async (req: AuthRequest, res: Response) => {
     }
 
     const updated = await prisma.mealHistory.update({
-      where: { id },
+      where: { id: historyId },
       data: { rating },
     });
 

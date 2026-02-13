@@ -144,18 +144,18 @@ Client will run on `http://localhost:5173`
 - `DELETE /api/preferences/:id` - Delete preference
 
 ### Meals
-- `POST /api/meals/suggest` - Get meal suggestion
+- `GET /api/meals/suggest` - Get meal suggestion
 - `GET /api/meals/history` - Get meal history
-- `POST /api/meals/history/:id/rate` - Rate a meal
+- `PATCH /api/meals/history/:historyId/rate` - Rate a meal
 
 ### Grocery Lists
-- `POST /api/grocery` - Create grocery list
-- `GET /api/grocery` - Get grocery lists
-- `PUT /api/grocery/:id` - Update grocery list
+- `POST /api/grocery-lists` - Create grocery list
+- `GET /api/grocery-lists` - Get grocery lists
+- `PATCH /api/grocery-lists/:id` - Update grocery list
 
 ### Subscriptions
 - `POST /api/subscription/checkout` - Create checkout session
-- `POST /api/subscription/webhook` - Stripe webhook
+- `POST /api/webhooks/stripe` - Stripe webhook
 - `GET /api/subscription/status` - Get subscription status
 
 ## Development

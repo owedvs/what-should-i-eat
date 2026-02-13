@@ -35,18 +35,18 @@ router.post('/preferences', apiLimiter, authenticateToken, addPreference);
 router.delete('/preferences/:id', apiLimiter, authenticateToken, deletePreference);
 
 // Meals routes (protected with rate limiting)
-router.post('/meals/suggest', mealSuggestionLimiter, authenticateToken, suggestMeal);
+router.get('/meals/suggest', mealSuggestionLimiter, authenticateToken, suggestMeal);
 router.get('/meals/history', apiLimiter, authenticateToken, getMealHistory);
-router.post('/meals/history/:id/rate', apiLimiter, authenticateToken, rateMeal);
+router.patch('/meals/history/:historyId/rate', apiLimiter, authenticateToken, rateMeal);
 
 // Grocery routes (protected with rate limiting)
-router.post('/grocery', apiLimiter, authenticateToken, createGroceryList);
-router.get('/grocery', apiLimiter, authenticateToken, getGroceryLists);
-router.put('/grocery/:id', apiLimiter, authenticateToken, updateGroceryList);
+router.post('/grocery-lists', apiLimiter, authenticateToken, createGroceryList);
+router.get('/grocery-lists', apiLimiter, authenticateToken, getGroceryLists);
+router.patch('/grocery-lists/:id', apiLimiter, authenticateToken, updateGroceryList);
 
 // Subscription routes (with rate limiting)
 router.post('/subscription/checkout', apiLimiter, authenticateToken, createCheckoutSession);
-router.post('/subscription/webhook', webhookHandler); // Not rate limited - uses Stripe signature
+router.post('/webhooks/stripe', webhookHandler); // Not rate limited - uses Stripe signature
 router.get('/subscription/status', apiLimiter, authenticateToken, getSubscriptionStatus);
 
 export default router;
