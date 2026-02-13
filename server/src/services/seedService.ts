@@ -179,13 +179,47 @@ export const seedMeals = async () => {
         dietaryTags: ['pescatarian'],
         prepTime: 15,
       },
+      {
+        name: 'Mushroom Risotto',
+        description: 'Creamy Italian risotto with mixed mushrooms',
+        ingredients: [
+          'arborio rice',
+          'mushrooms',
+          'parmesan cheese',
+          'white wine',
+          'butter',
+          'onion',
+          'garlic',
+          'vegetable stock',
+        ],
+        cuisine: 'Italian',
+        dietaryTags: ['vegetarian', 'gluten-free'],
+        prepTime: 35,
+      },
+      {
+        name: 'Veggie Burger',
+        description: 'Delicious plant-based burger with all the toppings',
+        ingredients: [
+          'veggie patty',
+          'burger bun',
+          'lettuce',
+          'tomato',
+          'onion',
+          'pickles',
+          'vegan mayo',
+          'ketchup',
+        ],
+        cuisine: 'American',
+        dietaryTags: ['vegetarian', 'vegan'],
+        prepTime: 20,
+      },
     ];
 
     await prisma.meal.createMany({
       data: meals,
     });
 
-    console.log('Successfully seeded 10 meals');
+    console.log('Successfully seeded 12 meals');
   } catch (error) {
     console.error('Seed meals error:', error);
   }

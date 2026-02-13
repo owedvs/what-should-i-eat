@@ -7,7 +7,7 @@ import { FaTrash, FaPlus } from 'react-icons/fa';
 const Preferences: React.FC = () => {
   const [preferences, setPreferences] = useState<Record<string, Preference[]>>({});
   const [loading, setLoading] = useState(true);
-  const [newPreference, setNewPreference] = useState({ type: 'dietary', value: '' });
+  const [newPreference, setNewPreference] = useState({ type: 'liked_food', value: '' });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -90,10 +90,10 @@ const Preferences: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <PreferenceSection type="dietary" title="🥗 Dietary Restrictions" />
-          <PreferenceSection type="allergy" title="⚠️ Allergies" />
-          <PreferenceSection type="cuisine" title="🌍 Favorite Cuisines" />
-          <PreferenceSection type="ingredient" title="❤️ Liked Ingredients" />
+          <PreferenceSection type="liked_food" title="❤️ Liked Foods" />
+          <PreferenceSection type="disliked_food" title="❌ Disliked Foods" />
+          <PreferenceSection type="dietary_restriction" title="🥗 Dietary Restrictions" />
+          <PreferenceSection type="cuisine_preference" title="🌍 Cuisine Preferences" />
         </div>
 
         <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -108,10 +108,10 @@ const Preferences: React.FC = () => {
               }
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent outline-none"
             >
-              <option value="dietary">Dietary Restriction</option>
-              <option value="allergy">Allergy</option>
-              <option value="cuisine">Cuisine</option>
-              <option value="ingredient">Ingredient</option>
+              <option value="liked_food">Liked Food</option>
+              <option value="disliked_food">Disliked Food</option>
+              <option value="dietary_restriction">Dietary Restriction</option>
+              <option value="cuisine_preference">Cuisine Preference</option>
             </select>
             <input
               type="text"
