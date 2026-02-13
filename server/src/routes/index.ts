@@ -21,31 +21,32 @@ import {
   getSubscriptionStatus,
 } from '../controllers/subscriptionController';
 import { authenticateToken } from '../middleware/auth';
+import { apiLimiter, authLimiter, mealSuggestionLimiter } from '../middleware/rateLimit';
 
 const router = Router();
 
-// Auth routes
-router.post('/auth/register', register);
-router.post('/auth/login', login);
+// Auth routes (with stricter rate limiting)
+router.post('/auth/register', authLimiter, register);
+router.post('/auth/login', authLimiter, login);
 
-// Preferences routes (protected)
-router.get('/preferences', authenticateToken, getPreferences);
-router.post('/preferences', authenticateToken, addPreference);
-router.delete('/preferences/:id', authenticateToken, deletePreference);
+// Preferences routes (protected with rate limiting)
+router.get('/preferences', apiLimiter, authenticateToken, getPreferences);
+router.post('/preferences', apiLimiter, authenticateToken, addPreference);
+router.delete('/preferences/:id', apiLimiter, authenticateToken, deletePreference);
 
-// Meals routes (protected)
-router.post('/meals/suggest', authenticateToken, suggestMeal);
-router.get('/meals/history', authenticateToken, getMealHistory);
-router.post('/meals/history/:id/rate', authenticateToken, rateMeal);
+// Meals routes (protected with rate limiting)
+router.post('/meals/suggest', mealSuggestionLimiter, authenticateToken, suggestMeal);
+router.get('/meals/history', apiLimiter, authenticateToken, getMealHistory);
+router.post('/meals/history/:id/rate', apiLimiter, authenticateToken, rateMeal);
 
-// Grocery routes (protected)
-router.post('/grocery', authenticateToken, createGroceryList);
-router.get('/grocery', authenticateToken, getGroceryLists);
-router.put('/grocery/:id', authenticateToken, updateGroceryList);
+// Grocery routes (protected with rate limiting)
+router.post('/grocery', apiLimiter, authenticateToken, createGroceryList);
+router.get('/grocery', apiLimiter, authenticateToken, getGroceryLists);
+router.put('/grocery/:id', apiLimiter, authenticateToken, updateGroceryList);
 
-// Subscription routes
-router.post('/subscription/checkout', authenticateToken, createCheckoutSession);
-router.post('/subscription/webhook', webhookHandler); // Not protected - uses Stripe signature
-router.get('/subscription/status', authenticateToken, getSubscriptionStatus);
+// Subscription routes (with rate limiting)
+router.post('/subscription/checkout', apiLimiter, authenticateToken, createCheckoutSession);
+router.post('/subscription/webhook', webhookHandler); // Not rate limited - uses Stripe signature
+router.get('/subscription/status', apiLimiter, authenticateToken, getSubscriptionStatus);
 
 export default router;
