@@ -21,33 +21,34 @@ import {
   handleWebhook,
 } from '../controllers/subscriptionController';
 import { authenticate } from '../middleware/auth';
+import { apiLimiter, authLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
-// Auth routes
-router.post('/auth/register', register);
-router.post('/auth/login', login);
+// Auth routes with strict rate limiting
+router.post('/auth/register', authLimiter, register);
+router.post('/auth/login', authLimiter, login);
 
-// Preferences routes (protected)
-router.get('/preferences', authenticate, getPreferences);
-router.post('/preferences', authenticate, addPreference);
-router.delete('/preferences/:id', authenticate, deletePreference);
+// Preferences routes (protected with rate limiting)
+router.get('/preferences', apiLimiter, authenticate, getPreferences);
+router.post('/preferences', apiLimiter, authenticate, addPreference);
+router.delete('/preferences/:id', apiLimiter, authenticate, deletePreference);
 
-// Meals routes (protected)
-router.get('/meals/suggest', authenticate, suggestMeal);
-router.get('/meals/history', authenticate, getMealHistory);
-router.patch('/meals/history/:historyId/rate', authenticate, rateMeal);
+// Meals routes (protected with rate limiting)
+router.get('/meals/suggest', apiLimiter, authenticate, suggestMeal);
+router.get('/meals/history', apiLimiter, authenticate, getMealHistory);
+router.patch('/meals/history/:historyId/rate', apiLimiter, authenticate, rateMeal);
 
-// Grocery lists routes (protected)
-router.post('/grocery-lists', authenticate, createGroceryList);
-router.get('/grocery-lists', authenticate, getGroceryLists);
-router.patch('/grocery-lists/:id', authenticate, updateGroceryList);
+// Grocery lists routes (protected with rate limiting)
+router.post('/grocery-lists', apiLimiter, authenticate, createGroceryList);
+router.get('/grocery-lists', apiLimiter, authenticate, getGroceryLists);
+router.patch('/grocery-lists/:id', apiLimiter, authenticate, updateGroceryList);
 
-// Subscription routes (protected)
-router.post('/subscription/checkout', authenticate, createCheckoutSession);
-router.get('/subscription/status', authenticate, getSubscriptionStatus);
+// Subscription routes (protected with rate limiting)
+router.post('/subscription/checkout', apiLimiter, authenticate, createCheckoutSession);
+router.get('/subscription/status', apiLimiter, authenticate, getSubscriptionStatus);
 
-// Stripe webhook (raw body)
+// Stripe webhook (raw body, no rate limiting for webhooks as they're from Stripe)
 router.post('/webhooks/stripe', handleWebhook);
 
 export default router;
