@@ -55,11 +55,24 @@ export const suggestMeal = async (req: Request, res: Response): Promise<void> =>
     }
 
     // Query meals excluding recent ones
-    let mealsQuery: any = {
+    interface MealsQuery {
       where: {
-        id: {
-          notIn: recentMealIds.length > 0 ? recentMealIds : undefined,
-        },
+        id?: {
+          notIn?: string[];
+        };
+        prepTime?: {
+          lte: number;
+        };
+      };
+    }
+
+    const mealsQuery: MealsQuery = {
+      where: {
+        ...(recentMealIds.length > 0 && {
+          id: {
+            notIn: recentMealIds,
+          },
+        }),
       },
     };
 

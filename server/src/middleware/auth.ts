@@ -13,11 +13,11 @@ declare global {
   }
 }
 
-export const authenticate = async (
+export const authenticate = (
   req: Request,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): void => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
 
